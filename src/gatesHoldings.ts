@@ -21,7 +21,7 @@ export interface GatesHoldingsEstimate {
 const HOLDINGS: GatesHolding[] = [
   { symbol: "MSFT", displayName: "Microsoft", shares: 28_457_247 },
   {
-    symbol: "BRK.B",
+    symbol: "BRK-B",
     displayName: "Berkshire Hathaway (Class B)",
     shares: 17_172_435,
   },

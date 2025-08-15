@@ -15,25 +15,70 @@ export interface GatesNetWorthReport {
 
 export interface GatesNetWorthOptions {
   token?: string; // Alltick token
+  gears?: number[]; // optional Alltick depth gears
 }
 
 export async function computeGatesNetWorth(
   options: GatesNetWorthOptions = {}
 ): Promise<GatesNetWorthReport> {
   const holdings = getGatesHoldings();
-  const toAlltickCode = (symbol: string): string => {
-    if (symbol === "BRK-B") return "BRKB.US";
-    return `${symbol}.US`;
+  const defaultGears =
+    options.gears && options.gears.length > 0
+      ? options.gears
+      : [5, 10, 20, 50, 100, 200, 500, 1000, 2000];
+
+  const codeCandidates = (symbol: string): string[] => {
+    // Primary convention appears to be SYMBOL.US
+    const candidates = new Set<string>();
+    const add = (s: string) => candidates.add(s);
+    const base = symbol;
+    add(`${base}.US`);
+    // Normalize common variants (dot vs dash, removed separator)
+    if (base.includes("-")) {
+      const dot = base.replace(/-/g, ".");
+      const nodash = base.replace(/-/g, "");
+      add(`${dot}.US`);
+      add(`${nodash}.US`);
+      add(`${base.replace(/-/g, "_")}.US`);
+    }
+    if (base.includes(".")) {
+      const dash = base.replace(/\./g, "-");
+      const nodot = base.replace(/\./g, "");
+      add(`${dash}.US`);
+      add(`${nodot}.US`);
+      add(`${base.replace(/\./g, "_")}.US`);
+    }
+    // Specific edge-case mappings observed in the wild
+    if (base === "BRK-B") {
+      ["BRK.B.US", "BRK-B.US", "BRKB.US", "BRK.B", "BRKB"].forEach(add);
+    }
+    return Array.from(candidates);
   };
+
+  async function fetchDepthWithCandidates(symbol: string) {
+    const candidates = codeCandidates(symbol);
+    let lastError: Error | undefined;
+    for (const code of candidates) {
+      try {
+        const depth = await fetchAlltickDepth(
+          code,
+          options.token,
+          8000,
+          defaultGears
+        );
+        return depth;
+      } catch (error) {
+        lastError = error as Error;
+      }
+    }
+    throw lastError || new Error("No valid Alltick code mapping");
+  }
   const perStock: StockLiquidationSimulationResult[] = [];
   const delayMs = 5000; // throttle per requirement
   for (let i = 0; i < holdings.holdings.length; i++) {
     const h = holdings.holdings[i];
     try {
-      const depth = await fetchAlltickDepth(
-        toAlltickCode(h.symbol),
-        options.token
-      );
+      const depth = await fetchDepthWithCandidates(h.symbol);
       if (depth.bids.length === 0) {
         perStock.push({
           symbol: h.symbol,
@@ -75,6 +120,6 @@ export async function computeGatesNetWorth(
     perStock,
     totalRealizedUsd,
     timestamp: new Date().toISOString(),
-    note: "Depth strictly from Alltick limited gears (no fallback); NOT full market depth. Symbols with 'alltick-error' lacked valid code mapping (ret=600).",
+      note: "Liquidation uses Alltick L2 depth (multi-gear). Totals reflect available levels; symbols marked 'alltick-error' likely lacked a valid code mapping (ret=600).",
   };
 }
