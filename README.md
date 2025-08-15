@@ -10,6 +10,7 @@ Estimate Satoshi Nakamoto's BTC holdings and simulate immediate liquidation agai
 - Reports realized USD, average execution price, and price impact vs current Coinbase spot (when available)
 - CLI via `npx tsx src/cli.ts`
 - Tested with Vitest
+- Optional Bill Gates stocks comparator (very rough; see section below)
 
 ## Install & Run
 
@@ -39,15 +40,22 @@ Simulated Immediate Liquidation (aggregated bids: COINBASE,BINANCE,BYBIT,OKX):
 npm test
 ```
 
-## Bill Gates Equity Liquidation CLI (Alltick Order Book)
+## Key learning: liquidity is not someone’s full balance sitting on the spot book
 
-Additionally, a simulator estimates proceeds if Bill Gates attempted to instantly liquidate several major public equity holdings (static snapshot). It uses ONLY live Alltick bid depth (no synthetic fallback). If no bid data returns for a symbol, that symbol contributes zero realized USD and all shares remain unsold.
+Large holders do not keep all their funds in spot orders. Most of the time, only a fraction of aggregate willingness-to-buy is visible in the live book at any moment. For huge liquidations, you typically have to pace orders and wait for the book to replenish as market makers and other participants update quotes. This repo’s core simulator intentionally models a naive “instant sweep” to highlight how quickly the visible book exhausts; real execution would be throttled and staged over time.
+
+## Bill Gates Net Worth (Stocks) – rough comparator via Alltick
+
+For comparison with a non-crypto large-holder scenario, there is a very rough simulator that estimates proceeds if Bill Gates instantly liquidated parts of several public equity positions. It is primarily illustrative and often does not work very well in practice due to data gaps.
+
+It uses ONLY live Alltick bid depth (no synthetic fallback). If no bid data returns for a symbol, that symbol contributes zero realized USD and all shares remain unsold.
 
 Key points:
 - Fetches Alltick order book depth (bids) per symbol. Only the returned bid levels are used; asks are irrelevant for a sell sweep.
 - No synthetic depth beyond what Alltick provides.
 - Average execution price = realized USD / filled shares (if any).
 - Unfilled shares are reported; they produce no proceeds.
+- Rough/fragile in practice: limited symbol coverage, rate limits, and shallow depth often lead to partial or zero fills.
 
 ### Authentication (Recommended)
 
@@ -70,6 +78,7 @@ npx tsx src/gatesCli.ts
 * Depth is partial: only top-of-book levels exposed by Alltick are considered; true market impact for a full liquidation would be vastly greater.
 * Holdings list is static and may be outdated; not refreshed automatically.
 * Results are illustrative only and not investment advice.
+* This comparator is brittle and may return zero or inconsistent data—treat outputs as an impression, not a measurement.
 
 ## Notes
 
