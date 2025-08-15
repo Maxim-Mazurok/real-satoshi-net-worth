@@ -1,12 +1,13 @@
 # real-satoshi-net-worth
 
-Estimate Satoshi Nakamoto's BTC holdings and simulate immediate liquidation against Coinbase BTC-USD order book depth.
+Estimate Satoshi Nakamoto's BTC holdings and simulate immediate liquidation against a live, aggregated multi‑exchange order book (Coinbase, Binance, Bybit, OKX). Upbit excluded from aggregation (KRW quote) pending FX conversion logic.
 
 ## Features
 
 - Simple heuristic holdings estimate (override with `--btc`)
-- Fetches live Coinbase aggregated order book (level 2)
-- Simulates market sell sweeping bids to compute realized USD and average price
+- Fetches and aggregates live order book bids (public endpoints: Coinbase BTC-USD, Binance BTCUSDT, Bybit BTCUSDT, OKX BTC-USDT)
+- Simulates market sell sweeping best bids first across all included exchanges
+- Reports realized USD, average execution price, and price impact vs current Coinbase spot (when available)
 - CLI via `npx tsx src/cli.ts`
 - Tested with Vitest
 
@@ -15,7 +16,7 @@ Estimate Satoshi Nakamoto's BTC holdings and simulate immediate liquidation agai
 ```bash
 npm install
 npx tsx src/cli.ts
-# or override assumed holdings
+# override assumed holdings
 npx tsx src/cli.ts --btc 900000
 ```
 
@@ -24,10 +25,10 @@ npx tsx src/cli.ts --btc 900000
 ```
 Timestamp: 2025-08-15T12:34:56.000Z
 Assumed Satoshi Holdings: 1,000,000 BTC (range 600,000 - 1,100,000 BTC)
-Simulated Immediate Liquidation (sweeping bids on Coinbase BTC-USD):
+Simulated Immediate Liquidation (aggregated bids: COINBASE,BINANCE,BYBIT,OKX):
   Realized USD: $18,532,000,000
   Average Realized Price: $18,532.00 per BTC
-  Levels Consumed: 275
+  Unsold (insufficient bids): 0 BTC (0%)
 ```
 
 (Values above illustrative; depends on live order book.)
@@ -40,7 +41,12 @@ npm test
 
 ## Notes
 
-- Uses public Coinbase Exchange REST endpoint (no auth) for order book.
+- Uses public exchange REST endpoints (no API keys needed for depth) for order books.
+  - Coinbase (BTC-USD): https://api.exchange.coinbase.com/products/BTC-USD/book?level=2
+  - Binance (BTCUSDT): https://api.binance.com/api/v3/depth?symbol=BTCUSDT&limit=1000
+  - Bybit (BTCUSDT, spot): https://api.bybit.com/v5/market/orderbook?category=spot&symbol=BTCUSDT
+  - OKX (BTC-USDT): https://www.okx.com/api/v5/market/books?instId=BTC-USDT
+  - Upbit (KRW-BTC) available but excluded from aggregation until FX conversion is implemented
 - Level 2 book gives aggregated depth; real slippage could differ.
 - Holdings estimate is speculative; not financial advice.
 
