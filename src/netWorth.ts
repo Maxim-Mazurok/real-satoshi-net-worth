@@ -22,6 +22,7 @@ import {
   PriceImpactMetrics,
 } from "./coinbasePrice";
 import { fetchUpbitOrderBook } from "./upbitOrderBook";
+import { augmentBooksWithCoinbase } from "./orderBookAugmentation";
 
 export interface NetWorthComputationOptions {
   overrideBtcAmount?: number;
@@ -69,9 +70,14 @@ export async function computeNetWorth(
     throw new Error("Failed to fetch order books from all exchanges");
   }
   const orderBook = mergeOrderBooks(successful);
-  // Use multi-exchange liquidation to capture per-exchange breakdown while preserving legacy fields
-  const liquidation = simulateMultiExchangeLiquidation(
+  // Augment individual books (except Coinbase) with extrapolated deeper bids based on Coinbase distribution
+  const { books: augmentedBooks } = augmentBooksWithCoinbase(
     successful.map((s) => ({ source: s.source, depth: s.depth })),
+    "coinbase"
+  );
+  // Use multi-exchange liquidation after augmentation
+  const liquidation = simulateMultiExchangeLiquidation(
+    augmentedBooks,
     holdings.assumedBtc
   );
   let spot: number | undefined;
