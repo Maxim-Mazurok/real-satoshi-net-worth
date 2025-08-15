@@ -7,7 +7,8 @@
   "type": "commonjs",
   "main": "index.js",
   "bin": {
-    "real-satoshi-net-worth": "src/cli.ts"
+    "real-satoshi-net-worth": "src/cli.ts",
+    "gates-net-worth": "src/gatesCli.ts"
   },
   "scripts": {
     "start": "tsx src/cli.ts",
@@ -16,7 +17,9 @@
     "dev": "vitest",
     "type-check": "tsc --noEmit"
   },
-  "dependencies": {},
+  "dependencies": {
+    "dotenv": "^17.2.1"
+  },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "tsx": "^4.0.0",

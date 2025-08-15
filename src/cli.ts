@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import "dotenv/config";
 import { computeNetWorth } from "./netWorth";
 
 function parseArgs(): { btc?: number; product?: string } {

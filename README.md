@@ -38,11 +38,44 @@ Simulated Immediate Liquidation (sweeping bids on Coinbase BTC-USD):
 npm test
 ```
 
+## Bill Gates Equity Liquidation CLI (Alltick Order Book)
+
+Additionally, a simulator estimates proceeds if Bill Gates attempted to instantly liquidate several major public equity holdings (static snapshot). It uses ONLY live Alltick bid depth (no synthetic fallback). If no bid data returns for a symbol, that symbol contributes zero realized USD and all shares remain unsold.
+
+Key points:
+- Fetches Alltick order book depth (bids) per symbol. Only the returned bid levels are used; asks are irrelevant for a sell sweep.
+- No synthetic depth beyond what Alltick provides.
+- Average execution price = realized USD / filled shares (if any).
+- Unfilled shares are reported; they produce no proceeds.
+
+### Authentication (Recommended)
+
+Set an Alltick API token via environment variable `ALLTICK_TOKEN` for higher rate limits / reliability:
+
+```bash
+export ALLTICK_TOKEN="your-token-here"
+npx tsx src/gatesCli.ts
+```
+
+If `ALLTICK_TOKEN` is not set, the CLI attempts unauthenticated requests (may be rate limited or fail). Missing token is non-fatal; symbols failing to fetch simply yield zero proceeds.
+
+### Run
+
+```bash
+npx tsx src/gatesCli.ts
+```
+
+### Disclaimers
+* Depth is partial: only top-of-book levels exposed by Alltick are considered; true market impact for a full liquidation would be vastly greater.
+* Holdings list is static and may be outdated; not refreshed automatically.
+* Results are illustrative only and not investment advice.
+
 ## Notes
 
 - Uses public Coinbase Exchange REST endpoint (no auth) for order book.
 - Level 2 book gives aggregated depth; real slippage could differ.
 - Holdings estimate is speculative; not financial advice.
+- Bill Gates equity liquidation simulation is an approximation; real market impact would be vastly larger and more complex.
 
 ## Disclaimer
 
