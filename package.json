@@ -1,0 +1,26 @@
+{
+  "name": "real-satoshi-net-worth",
+  "version": "1.0.0",
+  "description": "CLI to estimate Satoshi Nakamoto's BTC holdings liquidation value using Coinbase order book depth.",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "bin": {
+    "real-satoshi-net-worth": "src/cli.ts"
+  },
+  "scripts": {
+    "start": "tsx src/cli.ts",
+    "cli": "tsx src/cli.ts",
+    "test": "vitest run",
+    "dev": "vitest",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^1.6.0"
+  }
+}

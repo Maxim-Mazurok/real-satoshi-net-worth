@@ -1,0 +1,45 @@
+# real-satoshi-net-worth
+
+Estimate Satoshi Nakamoto's BTC holdings and simulate immediate liquidation against Coinbase BTC-USD order book depth.
+
+## Features
+
+- Simple heuristic holdings estimate (override with `--btc`)
+- Fetches live Coinbase aggregated order book (level 2)
+- Simulates market sell sweeping bids to compute realized USD and average price
+- CLI via `npx tsx src/cli.ts`
+- Tested with Vitest
+
+## Install & Run
+
+```bash
+npm install
+npx tsx src/cli.ts
+# or override assumed holdings
+npx tsx src/cli.ts --btc 900000
+```
+
+## Output Example
+
+```
+Timestamp: 2025-08-15T12:34:56.000Z
+Assumed Satoshi Holdings: 1,000,000 BTC (range 600,000 - 1,100,000 BTC)
+Simulated Immediate Liquidation (sweeping bids on Coinbase BTC-USD):
+  Realized USD: $18,532,000,000
+  Average Realized Price: $18,532.00 per BTC
+  Levels Consumed: 275
+```
+
+(Values above illustrative; depends on live order book.)
+
+## Tests
+
+```bash
+npm test
+```
+
+## Notes
+
+- Uses public Coinbase Exchange REST endpoint (no auth) for order book.
+- Level 2 book gives aggregated depth; real slippage could differ.
+- Holdings estimate is speculative; not financial advice.
